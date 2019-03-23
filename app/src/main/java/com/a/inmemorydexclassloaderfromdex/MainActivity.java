@@ -6,6 +6,9 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -25,18 +28,33 @@ import java.util.concurrent.Future;
 import dalvik.system.DexClassLoader;
 import dalvik.system.InMemoryDexClassLoader;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    Button button1;
+    TextView textView1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        button1 = findViewById(R.id.button);
+        button1.setOnClickListener(this);
+        textView1 = findViewById(R.id.textView);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.button) {
+            performAction();
+        }
+    }
+
+    private void performAction() {
         ExecutorService pool = Executors.newFixedThreadPool(1);
         Future<String> future = pool.submit(new LoaderCallable(this.getApplicationContext()));
         try {
             String string = future.get();
-            System.out.println(string);
+            textView1.setText(string);
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -75,7 +93,7 @@ class LoaderCallable implements Callable<String> {
 
         Log.i("MainActivity", "DOWNLOADING FINISHED!!!");
 
-        InMemoryDexClassLoader inMemoryDexClassLoader = new InMemoryDexClassLoader(byteBuffer,  context.getClassLoader());
+        InMemoryDexClassLoader inMemoryDexClassLoader = new InMemoryDexClassLoader(byteBuffer, context.getClassLoader());
 
         Class<?> dynamicClass = inMemoryDexClassLoader.loadClass("ClassToLoadWithClassloader");
         Constructor<?> ctor = dynamicClass.getConstructor();
