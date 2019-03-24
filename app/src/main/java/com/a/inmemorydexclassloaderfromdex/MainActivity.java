@@ -8,8 +8,6 @@ import android.os.Bundle;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -22,7 +20,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import dalvik.system.DexClassLoader;
 import dalvik.system.InMemoryDexClassLoader;
 
 public class MainActivity extends AppCompatActivity {
@@ -57,21 +54,10 @@ class LoaderCallable implements Callable<String> {
     @Override
     public String call() throws Exception {
 
-        URL url = new URL("http://10.0.2.2:8888/classes.dex");
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        urlConnection.setRequestMethod("GET");
-        urlConnection.connect();
-        InputStream inputStream = urlConnection.getInputStream();
+        ExecutorService pool = Executors.newFixedThreadPool(1);
+        Future<ByteArrayOutputStream> future = pool.submit(new DownloaderCallable(context));
 
-        ByteArrayOutputStream bufferArray = new ByteArrayOutputStream();
-        int nRead;
-        byte[] data = new byte[2048];
-
-        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-            bufferArray.write(data, 0, nRead);
-        }
-
-        ByteBuffer byteBuffer = ByteBuffer.wrap(bufferArray.toByteArray());
+        ByteBuffer byteBuffer = ByteBuffer.wrap(future.get().toByteArray());
 
         Log.i("MainActivity", "DOWNLOADING FINISHED!!!");
 
